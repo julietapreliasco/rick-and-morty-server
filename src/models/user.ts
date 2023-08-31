@@ -14,6 +14,12 @@ const UserSchema = new Schema<User>({
     type: String,
     required: true,
   },
+  favoriteCharacters: [
+    {
+      type: String,
+      required: false,
+    },
+  ],
 });
 
 export default model<User>("UserModel", UserSchema);
