@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { BodyResponse } from "../types/interfaces";
-import { CustomError } from "../models/cutom-error";
 import firebaseApp from "../config/firebase";
 import UserModel from "../models/user";
 import { User } from "../types/interfaces";
@@ -25,10 +24,10 @@ export const createUser = async (
   try {
     const isUsed = await UserModel.findOne({ email: req.body.email });
     if (isUsed) {
-      throw new CustomError(
-        400,
-        `User with email ${req.body.email} is already registered.`
-      );
+      res.status(404).json({
+        message: `User with email ${req.body.email} is already registered.`,
+        error: true,
+      });
     }
 
     const newFirebaseUser = await firebaseApp.auth().createUser({
@@ -50,7 +49,11 @@ export const createUser = async (
       error: false,
     });
   } catch (error: any) {
-    throw new CustomError(500, error.message);
+    return res.status(500).json({
+      message: "There was an error!",
+      data: undefined,
+      error: true,
+    });
   }
 };
 
@@ -62,10 +65,13 @@ export const addFavoriteCharacter = async (
     const userById = await UserModel.findOne({ _id: req.params.id });
 
     if (!userById) {
-      throw new Error(`No user found with ID ${req.params.id}.`);
+      res.status(404).json({
+        message: `No user found with ID ${req.params.id}.`,
+        error: true,
+      });
     }
 
-    const characterFound = userById.favoriteCharacters?.some(
+    const characterFound = userById?.favoriteCharacters?.some(
       (id) => id === req.body.favoriteCharacters
     );
 
@@ -91,7 +97,7 @@ export const addFavoriteCharacter = async (
   } catch (error: any) {
     return res.status(500).json({
       message: `Server error: ${error}`,
-      data: undefined,
+      data: error,
       error: true,
     });
   }
